@@ -1,57 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1h946vv" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.9.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.18.0">
+  <bpmn:collaboration id="Collaboration_02l97tn">
+    <bpmn:participant id="Participant_0k5fr83" name="SEND ORDER TO DUSTIN" processRef="dustin-edi-send-order" />
+  </bpmn:collaboration>
   <bpmn:process id="dustin-edi-send-order" name="Send EDI order to Dustin" isExecutable="true">
-    <bpmn:startEvent id="start" name="Send order">
-      <bpmn:outgoing>Flow_1g4ueu4</bpmn:outgoing>
-    </bpmn:startEvent>
+    <bpmn:laneSet id="LaneSet_17bn8mz">
+      <bpmn:lane id="Lane_0lgr5rr">
+        <bpmn:flowNodeRef>extractDocumentID</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>start</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_1b3hm98" name="DUSTIN">
+        <bpmn:flowNodeRef>sendOrder</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_12v8cdy" name="HUB FUNCTIONS">
+        <bpmn:flowNodeRef>prepareOrder</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
     <bpmn:sequenceFlow id="Flow_1g4ueu4" sourceRef="start" targetRef="prepareOrder" />
     <bpmn:sequenceFlow id="Flow_0wt7upp" sourceRef="prepareOrder" targetRef="sendOrder" />
-    <bpmn:endEvent id="end" name="Order sent">
-      <bpmn:extensionElements />
-      <bpmn:incoming>Flow_0ni273e</bpmn:incoming>
-    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_08er0t2" sourceRef="sendOrder" targetRef="extractDocumentID" />
     <bpmn:sequenceFlow id="Flow_0ni273e" sourceRef="extractDocumentID" targetRef="end" />
-    <bpmn:serviceTask id="prepareOrder" name="Prepare order">
-      <bpmn:extensionElements>
-        <camunda:connector>
-          <camunda:inputOutput>
-            <camunda:inputParameter name="url">http://host.docker.internal:8282/dustin/prepare/order</camunda:inputParameter>
-            <camunda:inputParameter name="method">POST</camunda:inputParameter>
-            <camunda:inputParameter name="json">
-              <camunda:script scriptFormat="js">environment.variables.OrderURL = environment.variables.input.OrderURL;
-delete(environment.variables.input.OrderURL);
-//BuyerOrderNumber ???
-next(null, environment.variables.input);</camunda:script>
-            </camunda:inputParameter>
-          </camunda:inputOutput>
-          <camunda:connectorId>httpRequest</camunda:connectorId>
-        </camunda:connector>
-        <camunda:inputOutput>
-          <camunda:outputParameter name="OrderXML">${content.output.body}</camunda:outputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1g4ueu4</bpmn:incoming>
-      <bpmn:outgoing>Flow_0wt7upp</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:serviceTask id="sendOrder" name="Send order to Dustin">
-      <bpmn:extensionElements>
-        <camunda:connector>
-          <camunda:inputOutput>
-            <camunda:inputParameter name="method">POST</camunda:inputParameter>
-            <camunda:inputParameter name="url">${environment.variables.OrderURL}</camunda:inputParameter>
-            <camunda:inputParameter name="body">${environment.output.OrderXML}</camunda:inputParameter>
-            <camunda:inputParameter name="responseType">text</camunda:inputParameter>
-            <camunda:inputParameter name="throwHttpErrors">${true}</camunda:inputParameter>
-          </camunda:inputOutput>
-          <camunda:connectorId>httpRequest</camunda:connectorId>
-        </camunda:connector>
-        <camunda:inputOutput>
-          <camunda:outputParameter name="OrderResponse">${content.output}</camunda:outputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0wt7upp</bpmn:incoming>
-      <bpmn:outgoing>Flow_08er0t2</bpmn:outgoing>
-    </bpmn:serviceTask>
     <bpmn:scriptTask id="extractDocumentID" name="Return details" scriptFormat="js">
       <bpmn:extensionElements />
       <bpmn:incoming>Flow_08er0t2</bpmn:incoming>
@@ -73,48 +42,127 @@ environment.output.output = {
 
 next();</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:sequenceFlow id="Flow_08er0t2" sourceRef="sendOrder" targetRef="extractDocumentID" />
+    <bpmn:endEvent id="end" name="Order sent">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0ni273e</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="start" name="Start send order">
+      <bpmn:outgoing>Flow_1g4ueu4</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="sendOrder" name="Send order to Dustin">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="url">${environment.variables.OrderURL}</camunda:inputParameter>
+            <camunda:inputParameter name="body">${environment.output.OrderXML}</camunda:inputParameter>
+            <camunda:inputParameter name="responseType">text</camunda:inputParameter>
+            <camunda:inputParameter name="throwHttpErrors">${true}</camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>httpRequest</camunda:connectorId>
+        </camunda:connector>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="OrderResponse">${content.output}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0wt7upp</bpmn:incoming>
+      <bpmn:outgoing>Flow_08er0t2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="prepareOrder" name="Prepare order">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">http://host.docker.internal:8282/dustin/prepare/order</camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="json">
+              <camunda:script scriptFormat="js">environment.variables.OrderURL = environment.variables.input.OrderURL;
+delete(environment.variables.input.OrderURL); // Delete the OrderURL before returning the order object
+next(null, environment.variables.input);</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>httpRequest</camunda:connectorId>
+        </camunda:connector>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="OrderXML">${content.output.body}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1g4ueu4</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wt7upp</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:textAnnotation id="TextAnnotation_14pznmy">
+      <bpmn:text>Requires input, see docs</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1psm5mw" sourceRef="start" targetRef="TextAnnotation_14pznmy" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="dustin-edi-send-order">
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="start" bioc:stroke="#43a047" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#43a047">
-        <dc:Bounds x="179" y="99" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="169" y="142" width="56" height="14" />
-        </bpmndi:BPMNLabel>
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_02l97tn">
+      <bpmndi:BPMNShape id="Participant_0k5fr83_di" bpmnElement="Participant_0k5fr83" isHorizontal="true">
+        <dc:Bounds x="140" y="80" width="880" height="510" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0owcrwl_di" bpmnElement="prepareOrder">
-        <dc:Bounds x="270" y="77" width="100" height="80" />
+      <bpmndi:BPMNShape id="Lane_0lgr5rr_di" bpmnElement="Lane_0lgr5rr" isHorizontal="true">
+        <dc:Bounds x="170" y="80" width="850" height="180" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0oxbusv_di" bpmnElement="sendOrder">
-        <dc:Bounds x="430" y="77" width="100" height="80" />
+      <bpmndi:BPMNShape id="Lane_1b3hm98_di" bpmnElement="Lane_1b3hm98" isHorizontal="true">
+        <dc:Bounds x="170" y="430" width="850" height="160" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_12v8cdy_di" bpmnElement="Lane_12v8cdy" isHorizontal="true">
+        <dc:Bounds x="170" y="260" width="850" height="170" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_14pznmy_di" bpmnElement="TextAnnotation_14pznmy">
+        <dc:Bounds x="320" y="110" width="180" height="30" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_05p2dkq_di" bpmnElement="extractDocumentID">
-        <dc:Bounds x="590" y="77" width="100" height="80" />
+        <dc:Bounds x="750" y="120" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_12lbry1_di" bpmnElement="end" bioc:stroke="#e53935" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#e53935">
-        <dc:Bounds x="752" y="99" width="36" height="36" />
+        <dc:Bounds x="912" y="142" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="744" y="142" width="53" height="14" />
+          <dc:Bounds x="904" y="185" width="53" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="start" bioc:stroke="#43a047" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#43a047">
+        <dc:Bounds x="222" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="200" y="185" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0oxbusv_di" bpmnElement="sendOrder">
+        <dc:Bounds x="540" y="460" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0owcrwl_di" bpmnElement="prepareOrder">
+        <dc:Bounds x="350" y="300" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_1psm5mw_di" bpmnElement="Association_1psm5mw">
+        <di:waypoint x="257" y="155" />
+        <di:waypoint x="320" y="138" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1g4ueu4_di" bpmnElement="Flow_1g4ueu4">
-        <di:waypoint x="215" y="117" />
-        <di:waypoint x="270" y="117" />
+        <di:waypoint x="258" y="160" />
+        <di:waypoint x="303" y="160" />
+        <di:waypoint x="303" y="340" />
+        <di:waypoint x="350" y="340" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0wt7upp_di" bpmnElement="Flow_0wt7upp">
-        <di:waypoint x="370" y="117" />
-        <di:waypoint x="430" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0ni273e_di" bpmnElement="Flow_0ni273e">
-        <di:waypoint x="690" y="117" />
-        <di:waypoint x="752" y="117" />
+        <di:waypoint x="450" y="340" />
+        <di:waypoint x="480" y="340" />
+        <di:waypoint x="480" y="500" />
+        <di:waypoint x="540" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_08er0t2_di" bpmnElement="Flow_08er0t2">
-        <di:waypoint x="530" y="117" />
-        <di:waypoint x="590" y="117" />
+        <di:waypoint x="640" y="500" />
+        <di:waypoint x="690" y="500" />
+        <di:waypoint x="690" y="160" />
+        <di:waypoint x="750" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ni273e_di" bpmnElement="Flow_0ni273e">
+        <di:waypoint x="850" y="160" />
+        <di:waypoint x="912" y="160" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

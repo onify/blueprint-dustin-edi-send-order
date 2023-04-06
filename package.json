@@ -1,0 +1,33 @@
+{
+  "name": "@onify/blueprint-dustin-edi-send-order",
+  "version": "0.0.1",
+  "description": "Onify Blueprint: Send EDI order to Dustin",
+  "scripts": {
+    "test": "mocha",
+    "posttest": "eslint . --cache"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onify/blueprint-dustin-edi-send-order.git"
+  },
+  "keywords": [
+    "onify",
+    "blueprint",
+    "dynamics365",
+    "microsoft",
+    "bpmn"
+  ],
+  "author": {
+    "name": "Onify",
+    "url": "https://github.com/onify"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/onify/blueprint-dustin-edi-send-order#readme",
+  "devDependencies": {
+    "@onify/flow-validator": "^0.0.3",
+    "chai": "^4.3.7",
+    "cron": "^2.1.0",
+    "eslint": "^8.27.0",
+    "mocha": "^10.1.0"
+  }
+}
